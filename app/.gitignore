@@ -1,0 +1,7 @@
+node_modules/
+.dist/
+# bundled by scripts/build.js from src/
+js/
+test/ui/screenshots/
+test-results/
+playwright-report/

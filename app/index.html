@@ -1,0 +1,78 @@
+<!doctype html>
+
+<body class="app" data-screen="loading">
+
+  <header class="topbar">
+    <div id="status" class="status" role="status" aria-live="polite" data-state="loading">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="status-text" class="status-text">Opening the log</span>
+    </div>
+    <button type="button" class="copy-text" data-copy hidden>Copy my text</button>
+    <details class="settings">
+      <summary aria-label="Settings">Settings</summary>
+      <div class="settings-panel">
+        <label class="setting">
+          <input type="checkbox" id="setting-obsidian">
+          <span>Obsidian links: write new dates as [[yyyy-mm-dd]]</span>
+        </label>
+        <p class="setting-note">Stored on this device for now.</p>
+        <label class="setting">
+          <span>Theme</span>
+          <select id="setting-theme">
+            <option value="auto">Like the system</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+        <p id="about" class="setting-note"></p>
+      </div>
+    </details>
+  </header>
+
+  <section id="not-loaded" class="not-loaded" hidden aria-labelledby="not-loaded-title">
+    <h1 id="not-loaded-title">Log not loaded</h1>
+    <p>This device has no copy of Workout.md yet. The app downloads it from
+    home the first time it can reach it; after that it works offline.</p>
+    <div class="row">
+      <button type="button" id="load-now" class="primary">Try again</button>
+      <button type="button" class="copy-text" data-copy>Copy my text</button>
+    </div>
+  </section>
+
+  <main id="editor" class="editor-host" aria-label="Workout log"></main>
+
+  <div id="notices" class="notices" aria-live="polite"></div>
+
+  <aside id="tap-panel" class="tap-panel" hidden></aside>
+
+  <nav id="logbar" class="logbar" aria-label="Logging">
+    <div class="symbols">
+      <button type="button" data-insert="x">x</button>
+      <button type="button" data-insert="^">^</button>
+      <button type="button" data-insert="++">++</button>
+      <button type="button" data-insert="@">@</button>
+      <button type="button" data-insert="~">~</button>
+      <button type="button" data-insert="kg">kg</button>
+      <button type="button" data-insert="lbs">lbs</button>
+      <button type="button" data-insert=";">;</button>
+    </div>
+    <div class="actions">
+      <button type="button" id="start-session">Start session</button>
+      <button type="button" id="same-set">Same set again</button>
+      <button type="button" id="undo" disabled>Undo</button>
+    </div>
+  </nav>
+
+  <dialog id="confirm-dialog" class="confirm" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">This sync would remove data</h2>
+    <p>Home has a version without these. Remove them here too, or keep yours?</p>
+    <ul id="removal-list"></ul>
+    <div class="row answers">
+      <button type="button" id="confirm-remove" class="danger">Remove</button>
+      <button type="button" id="confirm-keep" class="primary" autofocus>Keep</button>
+    </div>
+    <p class="aside">Your text stays on this device either way.
+      <button type="button" class="copy-text link" data-copy>Copy my text</button></p>
+  </dialog>
+
+</body>

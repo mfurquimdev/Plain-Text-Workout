@@ -1,0 +1,175 @@
+/* Colours. Token colours follow the Neovim plugin's default links
+   (editors/nvim/lua/workout/init.lua): date Title, time Special, exercise
+   Function, machine Type, reps Number, load Constant, units and symbols
+   Operator, super-set label Label, comment Comment, body weight
+   Identifier. Red and orange are kept for conflicts only (fixed #ff5f5f
+   and #ff8700, the same in every theme); parse errors use a wavy
+   underline instead of a colour. */
+
+:root {
+  color-scheme: light;
+  --bg: #fbfbf9;
+  --fg: #1f2328;
+  --muted: #59636e;
+  --line: #d8dee4;
+  --panel: #f0f2f4;
+  --accent: #0b5cad;
+  --accent-fg: #ffffff;
+  --cursor-line: rgba(11, 92, 173, 0.06);
+  --selection: rgba(11, 92, 173, 0.18);
+
+  --tok-date: #5a32a3;
+  --tok-date_bracket: #8c959f;
+  --tok-body_weight: #6b6b00;
+  --tok-time: #0a7ea4;
+  --tok-bullet: #8c959f;
+  --tok-superset_label: #57606a;
+  --tok-exercise: #0550ae;
+  --tok-machine: #116329;
+  --tok-initial: #a626a4;
+  --tok-sides: #57606a;
+  --tok-reps: #00796b;
+  --tok-repeat: #00796b;
+  --tok-load: #a626a4;
+  --tok-unit: #57606a;
+  --tok-bw: #a626a4;
+  --tok-operator: #57606a;
+  --tok-distance: #00796b;
+  --tok-duration: #00796b;
+  --tok-speed: #00796b;
+  --tok-range: #00796b;
+  --tok-comment: #6e7781;
+  --tok-conflict: #ff5f5f;
+  --tok-conflict_date: #ff8700;
+  --tok-invalid: #8250df;
+
+  --diag-error: #8250df;
+  --diag-warning: #9a6700;
+  --conflict-bg: rgba(255, 95, 95, 0.08);
+  --status-ok: #1a7f37;
+  --status-busy: #0a7ea4;
+  --status-wait: #9a6700;
+  --status-bad: #cf222e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #15181c;
+    --fg: #e6edf3;
+    --muted: #9198a1;
+    --line: #30363d;
+    --panel: #1f2329;
+    --accent: #4493f8;
+    --accent-fg: #0d1117;
+    --cursor-line: rgba(68, 147, 248, 0.08);
+    --selection: rgba(68, 147, 248, 0.28);
+
+    --tok-date: #b392f0;
+    --tok-date_bracket: #6e7681;
+    --tok-body_weight: #d2cc6b;
+    --tok-time: #56d4dd;
+    --tok-bullet: #6e7681;
+    --tok-superset_label: #b1bac4;
+    --tok-exercise: #79c0ff;
+    --tok-machine: #7ee787;
+    --tok-initial: #e39bff;
+    --tok-sides: #9198a1;
+    --tok-reps: #4fd1c5;
+    --tok-repeat: #4fd1c5;
+    --tok-load: #e39bff;
+    --tok-unit: #9198a1;
+    --tok-bw: #e39bff;
+    --tok-operator: #9198a1;
+    --tok-distance: #4fd1c5;
+    --tok-duration: #4fd1c5;
+    --tok-speed: #4fd1c5;
+    --tok-range: #4fd1c5;
+    --tok-comment: #8b949e;
+    --tok-invalid: #c297ff;
+
+    --diag-error: #c297ff;
+    --diag-warning: #d29922;
+    --conflict-bg: rgba(255, 95, 95, 0.12);
+    --status-ok: #3fb950;
+    --status-busy: #56d4dd;
+    --status-wait: #d29922;
+    --status-bad: #ff7b72;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #15181c;
+  --fg: #e6edf3;
+  --muted: #9198a1;
+  --line: #30363d;
+  --panel: #1f2329;
+  --accent: #4493f8;
+  --accent-fg: #0d1117;
+  --cursor-line: rgba(68, 147, 248, 0.08);
+  --selection: rgba(68, 147, 248, 0.28);
+
+  --tok-date: #b392f0;
+  --tok-date_bracket: #6e7681;
+  --tok-body_weight: #d2cc6b;
+  --tok-time: #56d4dd;
+  --tok-bullet: #6e7681;
+  --tok-superset_label: #b1bac4;
+  --tok-exercise: #79c0ff;
+  --tok-machine: #7ee787;
+  --tok-initial: #e39bff;
+  --tok-sides: #9198a1;
+  --tok-reps: #4fd1c5;
+  --tok-repeat: #4fd1c5;
+  --tok-load: #e39bff;
+  --tok-unit: #9198a1;
+  --tok-bw: #e39bff;
+  --tok-operator: #9198a1;
+  --tok-distance: #4fd1c5;
+  --tok-duration: #4fd1c5;
+  --tok-speed: #4fd1c5;
+  --tok-range: #4fd1c5;
+  --tok-comment: #8b949e;
+  --tok-invalid: #c297ff;
+
+  --diag-error: #c297ff;
+  --diag-warning: #d29922;
+  --conflict-bg: rgba(255, 95, 95, 0.12);
+  --status-ok: #3fb950;
+  --status-busy: #56d4dd;
+  --status-wait: #d29922;
+  --status-bad: #ff7b72;
+}
+
+/* one class per token kind: tok-<kind> */
+.tok-date { color: var(--tok-date); font-weight: 700; }
+.tok-date_bracket { color: var(--tok-date_bracket); }
+.tok-body_weight { color: var(--tok-body_weight); }
+.tok-time { color: var(--tok-time); }
+.tok-bullet { color: var(--tok-bullet); }
+.tok-superset_label { color: var(--tok-superset_label); font-style: italic; }
+.tok-exercise { color: var(--tok-exercise); font-weight: 600; }
+.tok-machine { color: var(--tok-machine); }
+.tok-initial { color: var(--tok-initial); }
+.tok-sides { color: var(--tok-sides); }
+.tok-reps { color: var(--tok-reps); }
+.tok-repeat { color: var(--tok-repeat); }
+.tok-load { color: var(--tok-load); }
+.tok-unit { color: var(--tok-unit); }
+.tok-bw { color: var(--tok-bw); font-style: italic; }
+.tok-operator { color: var(--tok-operator); }
+.tok-distance { color: var(--tok-distance); }
+.tok-duration { color: var(--tok-duration); }
+.tok-speed { color: var(--tok-speed); }
+.tok-range { color: var(--tok-range); }
+.tok-comment { color: var(--tok-comment); font-style: italic; }
+.tok-conflict { color: var(--tok-conflict); }
+.tok-conflict_date { color: var(--tok-conflict_date); }
+/* parse errors: a wavy underline, not red, so red means "conflict" only */
+.tok-invalid {
+  text-decoration: underline wavy var(--tok-invalid);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.cm-conflict-line { background: var(--conflict-bg); }
