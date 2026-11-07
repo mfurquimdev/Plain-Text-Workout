@@ -113,6 +113,21 @@ export class RemoteApplier {
     this.timer = this.host.later(() => { this.timer = null; this.tryApply() }, ms)
   }
 
+  /**
+   * The document as it will be once the pending remote text is applied:
+   * the owner's typing since the offer plus the remote changes. Saving and
+   * syncing must use this, not the visible text, or a save during the wait
+   * would store the document without the other device's changes while the
+   * base already has them, and the next sync would delete them.
+   */
+  projected() {
+    const doc = this.host.state().doc
+    const p = this.pending
+    if (!p) return doc.toString()
+    const remote = ChangeSet.of(diffText(p.startDoc.toString(), p.text), p.startDoc.length)
+    return remote.map(p.user).apply(doc).toString()
+  }
+
   /** Apply now if allowed; otherwise try again later. Returns true when applied. */
   tryApply() {
     const p = this.pending

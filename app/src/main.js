@@ -79,7 +79,7 @@ async function main() {
       doc: text,
       lang,
       touch,
-      onChange: scheduleSave,
+      onChange: () => { scheduleSave(); client.notifyEdit() },
       onTap: showTap,
       onHistory: ({ undo }) => { $("#undo").disabled = !undo },
     })

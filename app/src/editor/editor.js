@@ -63,7 +63,9 @@ export function createEditor({ parent, doc = "", lang, touch = false, onChange =
 
   const api = {
     view,
-    getText: () => view.state.doc.toString(),
+    // the text to save and sync: includes merged text still waiting to be shown
+    getText: () => remote.projected(),
+    getVisibleText: () => view.state.doc.toString(),
     isComposing: () => view.composing || view.compositionStarted,
 
     /** Replace the whole text (a fresh load), outside the undo history. */

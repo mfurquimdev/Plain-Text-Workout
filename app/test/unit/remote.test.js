@@ -93,3 +93,26 @@ test("typing between offer and apply is kept (remote changes are mapped over it)
   expect(r.tryApply()).toBe(true)
   expect(h.st.doc.toString()).toBe("2026-11-01\n- Squat 5x100kg\n\n" + LOG.replace("12x40kg\n", "12x40kg 8x40kg\n"))
 })
+
+test("while remote text waits, the text to save and sync already includes it", () => {
+  // otherwise a save during the wait stores the text without the other
+  // device's changes while the base has them, and the next sync deletes them
+  const now = { t: 0 }
+  const h = host(EditorState.create({ doc: LOG, extensions: [history()] }), now)
+  const r = new RemoteApplier(h, { quietMs: 3000 })
+  expect(r.projected()).toBe(LOG)
+  const merged = "2026-11-01\n- Squat 5x100kg\n\n" + LOG
+  r.lastInput = 0
+  r.offer(merged)
+  expect(r.tryApply()).toBe(false) // still waiting for a quiet pause
+  expect(h.st.doc.toString()).toBe(LOG) // not shown yet...
+  expect(r.projected()).toBe(merged) // ...but saved and synced
+  const tr = h.dispatch({ changes: { from: LOG.length - 1, insert: " 8x40kg" }, userEvent: "input.type" })
+  r.observe({ docChanged: true, transactions: [tr], changes: tr.changes })
+  const expected = "2026-11-01\n- Squat 5x100kg\n\n" + LOG.replace("12x40kg\n", "12x40kg 8x40kg\n")
+  expect(r.projected()).toBe(expected)
+  now.t = 5000
+  expect(r.tryApply()).toBe(true)
+  expect(h.st.doc.toString()).toBe(expected)
+  expect(r.projected()).toBe(expected)
+})

@@ -8,7 +8,8 @@
     "dev": "bun scripts/dev.js",
     "serve": "bun scripts/serve.js",
     "test": "bun test test/unit test/sync",
-    "test:ui": "bun scripts/build.js && playwright test -c test/ui/playwright.config.js",
+    "test:ui": "WORKOUT_STUBS=1 bun scripts/build.js && WORKOUT_STUBS=1 playwright test -c test/ui/playwright.config.js",
+    "test:e2e": "bun scripts/build.js && playwright test -c test/e2e/playwright.config.js",
     "icons": "bun scripts/icons.js"
   },
   "dependencies": {
