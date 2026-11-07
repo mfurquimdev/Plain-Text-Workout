@@ -1,0 +1,18 @@
+# Nue 2.0.0-beta.2 config. Nue builds only the page shell: index.html, the
+# CSS, the head (ui/head.html) and the bundled script js/app.js, which
+# scripts/build.js makes from src/ with bun. A root index.html pulls every
+# .js/.css file of the tree into the page, so source, tests and the service
+# worker are kept out here.
+meta:
+  title: Workout
+  description: The training log, Workout.md
+  viewport: width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content
+  theme-color: "#15181c"
+  favicon: /icons/icon.svg
+
+site:
+  # not built by Nue (bundled, copied or test-only)
+  skip: [src/, test/, scripts/, public/, test-results/, playwright-report/]
+
+# built and copied, but not added to the page as a script
+exclude: [sw.js]

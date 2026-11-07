@@ -1,2 +1,9 @@
 node_modules/
 .dist/
+# bundled by scripts/build.js from src/
+js/
+# built by `bun run wasm` from ../workout_syntax/wasm
+public/wasm/
+test/ui/screenshots/
+test-results/
+playwright-report/
