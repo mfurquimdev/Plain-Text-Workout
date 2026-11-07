@@ -1,0 +1,3 @@
+[submodule "workout_syntax"]
+	path = workout_syntax
+	url = git@github.com:mfurquimdev/Workout-Syntax.git
