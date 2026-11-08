@@ -1,6 +1,8 @@
 // Highlighting from the tokenizer: each visible line goes through
 // lang.tokenize, and each token becomes a mark with class `tok-<kind>`.
-// The colours are CSS custom properties (css/tokens.css).
+// The colours are CSS custom properties (css/tokens.css). Lines starting
+// with ";" (after optional spaces: comments and conflict lines) also get
+// the line class cm-comment-line, which sets the comment font.
 
 import { Decoration, ViewPlugin } from "@codemirror/view"
 import { RangeSetBuilder } from "@codemirror/state"
@@ -32,6 +34,11 @@ const mark = kind => {
   return m
 }
 const conflictLine = Decoration.line({ class: "cm-conflict-line" })
+const commentLine = Decoration.line({ class: "cm-comment-line" })
+const conflictCommentLine = Decoration.line({ class: "cm-conflict-line cm-comment-line" })
+
+/** A whole-line comment: ";" after optional spaces. */
+export const isCommentLine = text => /^\s*;/.test(text)
 
 /** Decorations for the given document ranges (the visible ones in the view). */
 export function buildDecorations(doc, ranges, lang, cache = new Map()) {
@@ -48,7 +55,8 @@ export function buildDecorations(doc, ranges, lang, cache = new Map()) {
           if (cache.size > 2000) cache.clear()
           cache.set(line.text, toks)
         }
-        if (toks.some(t => t.kind === "conflict")) builder.add(line.from, line.from, conflictLine)
+        const conflict = toks.some(t => t.kind === "conflict"), comment = isCommentLine(line.text)
+        if (conflict || comment) builder.add(line.from, line.from, conflict && comment ? conflictCommentLine : conflict ? conflictLine : commentLine)
         for (const t of toks) builder.add(line.from + t.from, line.from + t.to, mark(t.kind))
       }
       pos = line.to + 1

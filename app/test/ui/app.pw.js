@@ -62,24 +62,113 @@ test("a log line gets the expected tok-* classes", async ({ page }) => {
   await expect(date.locator(".tok-body_weight")).toHaveText("82.5")
 })
 
-test("a conflict line is red with an orange date", async ({ page }) => {
+// Nord (palettes/nord.gpl): Aurora Red and Aurora Orange; the light theme
+// uses their -deep variants (css/palette.css)
+const NORD_RED = "rgb(191, 97, 106)", NORD_ORANGE = "rgb(208, 135, 112)"
+const cssVar = (page, name) => page.evaluate(n => {
+  const probe = document.createElement("span")
+  probe.style.color = `var(${n})`
+  document.body.append(probe)
+  const c = getComputedStyle(probe).color
+  probe.remove()
+  return c
+}, name)
+const fontOf = loc => loc.evaluate(e => getComputedStyle(e).fontFamily)
+
+for (const scheme of ["dark", "light"]) {
+  test(`a conflict line is red with an orange date (${scheme})`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme })
+    await open(page)
+    const line = page.locator(".cm-line.cm-conflict-line")
+    await expect(line).toHaveCount(1)
+    const red = line.locator(".tok-conflict").first()
+    const date = line.locator(".tok-conflict_date")
+    await expect(date).toHaveText("2026-11-05")
+    const [r, o] = scheme === "dark" ? [NORD_RED, NORD_ORANGE]
+      : [await cssVar(page, "--nord-aurora-red-deep"), await cssVar(page, "--nord-aurora-orange-deep")]
+    await expect(red).toHaveCSS("color", r)
+    await expect(date).toHaveCSS("color", o)
+  })
+}
+
+test("the theme setting overrides the system scheme", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" })
   await open(page)
-  const line = page.locator(".cm-line.cm-conflict-line")
-  await expect(line).toHaveCount(1)
-  const red = line.locator(".tok-conflict").first()
-  const date = line.locator(".tok-conflict_date")
-  await expect(date).toHaveText("2026-11-05")
-  await expect(red).toHaveCSS("color", "rgb(255, 95, 95)")
-  await expect(date).toHaveCSS("color", "rgb(255, 135, 0)")
+  await page.locator(".settings summary").click()
+  await page.selectOption("#setting-theme", "dark")
+  await expect(page.locator(".cm-conflict-line .tok-conflict").first()).toHaveCSS("color", NORD_RED)
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(36, 41, 51)") // Darker Polar Night
+  await page.selectOption("#setting-theme", "light")
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(248, 249, 251)") // Lighter Snow Storm
+  await page.selectOption("#setting-theme", "auto")
 })
 
-test("a parse error is a wavy underline, not red", async ({ page }) => {
+test("a parse error is a wavy underline in Krypton, not red", async ({ page }) => {
   await open(page)
   await cursorAtLineEnd(page, 1)
   await page.evaluate(() => __workoutApp.editor.insert("\n- Row 12x25zz"))
   const bad = page.locator(".tok-invalid").filter({ hasText: "zz" })
   await expect(bad).toHaveCSS("text-decoration-style", "wavy")
-  expect(await bad.evaluate(e => getComputedStyle(e).color)).not.toBe("rgb(255, 95, 95)")
+  expect(await bad.evaluate(e => getComputedStyle(e).color)).not.toBe(NORD_RED)
+  expect(await fontOf(bad)).toMatch(/^"MonaspiceKr NFM"/)
+})
+
+test("fonts: Argon for text and UI, Radon for ; lines and comments, Krypton for problems", async ({ page }, info) => {
+  await open(page)
+  expect(await fontOf(page.locator(".cm-content"))).toMatch(/^"MonaspiceAr NFM"/)
+  expect(await fontOf(page.locator("#status-text"))).toMatch(/^"MonaspiceAr NFM"/)
+  expect(await fontOf(page.locator("#start-session"))).toMatch(/^"MonaspiceAr NFM"/)
+  // a whole ; line (here the conflict line) and a trailing ; comment
+  const conflict = page.locator(".cm-line.cm-conflict-line")
+  await expect(conflict).toHaveClass(/cm-comment-line/)
+  expect(await fontOf(conflict)).toMatch(/^"MonaspiceRn NFM"/)
+  expect(await fontOf(conflict.locator(".tok-conflict_date"))).toMatch(/^"MonaspiceRn NFM"/)
+  const trailing = page.locator(".cm-line").filter({ hasText: "heavy today" })
+  await expect(trailing).not.toHaveClass(/cm-comment-line/)
+  expect(await fontOf(trailing.locator(".tok-comment"))).toMatch(/^"MonaspiceRn NFM"/)
+  expect(await fontOf(trailing.locator(".tok-exercise"))).toMatch(/^"MonaspiceAr NFM"/)
+  await cursorAtLineEnd(page, 1)
+  await page.evaluate(() => __workoutApp.editor.insert("\n; a note"))
+  const note = page.locator(".cm-line").filter({ hasText: /^; a note$/ })
+  await expect(note).toHaveClass(/cm-comment-line/)
+  expect(await fontOf(note)).toMatch(/^"MonaspiceRn NFM"/)
+
+  // a lint range (the stub warns about an upper-case X), shown once the cursor leaves the line
+  await page.evaluate(() => __workoutApp.editor.insert("\n- Row 12X40kg"))
+  await cursorAtLineEnd(page, 1)
+  const range = page.locator(".cm-line").filter({ hasText: /^- Row 12X40kg$/ }).locator(".cm-lintRange-warning")
+  await expect(range).toHaveCount(1, { timeout: 5000 })
+  expect(await fontOf(range)).toMatch(/^"MonaspiceKr NFM"/)
+  if (phone(info)) {
+    await range.tap()
+    const diag = page.locator("#tap-panel .tap-diag")
+    await expect(diag).toContainText("lowercase")
+    expect(await fontOf(diag)).toMatch(/^"MonaspiceKr NFM"/)
+  } else {
+    await range.hover()
+    const msg = page.locator(".cm-tooltip .cm-diagnostic")
+    await expect(msg).toContainText("lowercase")
+    expect(await fontOf(msg)).toMatch(/^"MonaspiceKr NFM"/)
+  }
+})
+
+test("the bundled faces load from /fonts/", async ({ page }) => {
+  const fonts = []
+  page.on("response", r => { if (new URL(r.url()).pathname.startsWith("/fonts/")) fonts.push(new URL(r.url()).pathname) })
+  await open(page)
+  const faces = await page.evaluate(async () => {
+    await document.fonts.ready
+    // load each family, then ask whether it is available
+    const specs = ['19px "MonaspiceAr NFM"', 'bold 19px "MonaspiceAr NFM"', 'italic 19px "MonaspiceRn NFM"', '19px "MonaspiceRn NFM"', '19px "MonaspiceKr NFM"']
+    await Promise.all(specs.map(s => document.fonts.load(s, "Row 12x25kg")))
+    return {
+      check: specs.map(s => document.fonts.check(s, "Row 12x25kg")),
+      loaded: [...document.fonts].filter(f => f.status === "loaded").map(f => `${f.family.replace(/"/g, "")} ${f.weight} ${f.style}`),
+    }
+  })
+  expect(faces.check).toEqual([true, true, true, true, true])
+  expect(faces.loaded).toEqual(expect.arrayContaining(["MonaspiceAr NFM 400 normal", "MonaspiceAr NFM 700 normal", "MonaspiceRn NFM 400 italic", "MonaspiceKr NFM 400 normal"]))
+  expect(fonts).toEqual(expect.arrayContaining(["/fonts/MonaspiceArNFM-Regular.woff2", "/fonts/MonaspiceRnNFM-Italic.woff2", "/fonts/MonaspiceKrNFM-Regular.woff2"]))
 })
 
 test("the symbol row inserts text at the cursor", async ({ page }, info) => {

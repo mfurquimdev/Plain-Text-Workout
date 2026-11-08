@@ -7,7 +7,8 @@ meta:
   title: Workout
   description: The training log, Workout.md
   viewport: width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content
-  theme-color: "#15181c"
+  # Darker Polar Night (palettes/nord.gpl), the dark background
+  theme-color: "#242933"
   favicon: /icons/icon.svg
 
 site:

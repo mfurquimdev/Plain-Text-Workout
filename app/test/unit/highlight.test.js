@@ -46,12 +46,20 @@ test("columns are relative to each line", () => {
 
 test("a conflict line: red text, orange date, and a line class", () => {
   const d = decorations("; conflict 2026-01-01 phone: - Row 12x30kg")
-  expect(d[0]).toEqual({ text: "", cls: "cm-conflict-line" })
+  expect(d[0]).toEqual({ text: "", cls: "cm-conflict-line cm-comment-line" })
   expect(d.slice(1)).toEqual([
     { text: "; conflict", cls: "tok-conflict" },
     { text: "2026-01-01", cls: "tok-conflict_date" },
     { text: "phone: - Row 12x30kg", cls: "tok-conflict" },
   ])
+})
+
+test("lines starting with ; (after spaces) get the comment line class; trailing comments do not", () => {
+  const lines = text => decorations(text).filter(d => d.text === "").map(d => d.cls)
+  expect(lines("; a note")).toEqual(["cm-comment-line"])
+  expect(lines("   ; indented")).toEqual(["cm-comment-line"])
+  expect(lines("- Leg Press 63kg 12 ; heavy today")).toEqual([])
+  expect(decorations("- Leg Press 63kg 12 ; heavy today").at(-1)).toEqual({ text: "; heavy today", cls: "tok-comment" })
 })
 
 test("bad ranges from the module are dropped, not thrown", () => {

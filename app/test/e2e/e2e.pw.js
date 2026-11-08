@@ -12,6 +12,7 @@ import { createServer } from "node:net"
 const APP = fileURLToPath(new URL("../../", import.meta.url))
 const CRATE = join(APP, "../workout_syntax")
 const SERVER = join(CRATE, "target/debug/workout-server")
+const SHOTS = join(APP, "test/ui/screenshots")
 
 test.describe.configure({ mode: "serial" })
 
@@ -80,6 +81,12 @@ test("the real language module colours the log and reports a parse error", async
   await range.waitFor({ timeout: 10000 })
   await range.hover()
   await expect(page.locator(".cm-tooltip")).toContainText("39kg has no reps", { timeout: 10000 })
+  // the theme's fonts: Argon text, Krypton in the lint range and its message
+  const font = loc => loc.evaluate(e => getComputedStyle(e).fontFamily)
+  expect(await font(page.locator(".cm-content"))).toMatch(/^"MonaspiceAr NFM"/)
+  expect(await font(range)).toMatch(/^"MonaspiceKr NFM"/)
+  expect(await font(page.locator(".cm-tooltip .cm-diagnostic").first())).toMatch(/^"MonaspiceKr NFM"/)
+  expect(await page.evaluate(async () => { await document.fonts.ready; return document.fonts.check('19px "MonaspiceAr NFM"', "Row") })).toBe(true)
   expect(page.errors).toEqual([])
   await context.close()
 })
@@ -116,6 +123,17 @@ test("offline: the app opens from the service worker, keeps typing, and syncs wh
   await page.reload()
   await expect(page.locator(".cm-content")).toBeVisible({ timeout: 15000 })
   await expect.poll(() => editorText(page)).toContain("2027-01-15 82.5kg") // the device copy, not the network
+  // the bundled fonts come from the service worker's cache too
+  const fonts = await page.evaluate(async () => {
+    const cached = []
+    for (const key of await caches.keys()) for (const r of await (await caches.open(key)).keys()) if (new URL(r.url).pathname.startsWith("/fonts/")) cached.push(new URL(r.url).pathname)
+    await document.fonts.load('19px "MonaspiceAr NFM"', "Row")
+    await document.fonts.load('italic 19px "MonaspiceRn NFM"', "Row")
+    return { cached, ar: document.fonts.check('19px "MonaspiceAr NFM"', "Row"), rn: document.fonts.check('italic 19px "MonaspiceRn NFM"', "Row") }
+  })
+  expect(fonts.cached).toEqual(expect.arrayContaining(["/fonts/MonaspiceArNFM-Regular.woff2", "/fonts/MonaspiceKrNFM-Regular.woff2", "/fonts/MonaspiceRnNFM-Italic.woff2"]))
+  expect(fonts.ar).toBe(true)
+  expect(fonts.rn).toBe(true)
   await typeAtEnd(page, "\n- Curl 12x10kg")
   await expect(page.locator("#status-text")).toHaveText(/Offline|saved on this phone/i, { timeout: 15000 })
   expect(serverText()).not.toContain("- Curl 12x10kg")
@@ -145,4 +163,20 @@ test("a stale save on the server asks before removing, and Keep restores the ses
   expect(git("log", "--format=%s")).toContain("Outside edit")
   expect(page.errors).toEqual([])
   await context.close()
+})
+
+test("screenshots of the real app, light and dark", async ({ browser }) => {
+  for (const [name, make] of [["phone", phoneContext], ["desktop", desktopContext]]) {
+    for (const scheme of ["light", "dark"]) {
+      const context = await make(browser)
+      const page = await context.newPage()
+      await page.emulateMedia({ colorScheme: scheme })
+      await page.goto(base + "/")
+      await expect(page.locator("#status-text")).toHaveText(/Synced/, { timeout: 15000 })
+      await page.evaluate(() => document.fonts.ready)
+      await page.waitForTimeout(300)
+      await page.screenshot({ path: join(SHOTS, `e2e-${name}-${scheme}.png`) })
+      await context.close()
+    }
+  }
 })

@@ -1,0 +1,83 @@
+/* Bundled Monaspace Nerd Font Mono faces (SIL OFL 1.1, public/fonts/LICENSE),
+   subset to WOFF2 by scripts/fonts.sh and served from /fonts/. The service
+   worker pre-caches them with the rest of .dist, so they work offline.
+     MonaspiceAr NFM  Argon: normal text, the editor and the UI
+     MonaspiceKr NFM  Krypton: warnings and errors
+     MonaspiceRn NFM  Radon: comments (lines starting with ;) */
+
+@font-face {
+  font-family: "MonaspiceAr NFM";
+  src: url("/fonts/MonaspiceArNFM-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MonaspiceAr NFM";
+  src: url("/fonts/MonaspiceArNFM-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MonaspiceAr NFM";
+  src: url("/fonts/MonaspiceArNFM-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MonaspiceAr NFM";
+  src: url("/fonts/MonaspiceArNFM-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MonaspiceKr NFM";
+  src: url("/fonts/MonaspiceKrNFM-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MonaspiceKr NFM";
+  src: url("/fonts/MonaspiceKrNFM-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MonaspiceKr NFM";
+  src: url("/fonts/MonaspiceKrNFM-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MonaspiceKr NFM";
+  src: url("/fonts/MonaspiceKrNFM-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MonaspiceRn NFM";
+  src: url("/fonts/MonaspiceRnNFM-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MonaspiceRn NFM";
+  src: url("/fonts/MonaspiceRnNFM-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --font-text: "MonaspiceAr NFM", ui-monospace, Menlo, Consolas, monospace;
+  --font-problem: "MonaspiceKr NFM", ui-monospace, Menlo, Consolas, monospace;
+  --font-comment: "MonaspiceRn NFM", ui-monospace, Menlo, Consolas, monospace;
+}
