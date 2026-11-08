@@ -5,7 +5,7 @@
 // Usage: bun scripts/build.js [--dev]   (--dev: no minifying)
 
 import { cp, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises"
-import { join, relative } from "node:path"
+import { basename, join, relative } from "node:path"
 
 const root = join(import.meta.dir, "..")
 const dev = process.argv.includes("--dev")
@@ -37,7 +37,7 @@ export async function build({ quiet = false } = {}) {
 
   try {
     await stat(join(root, "public"))
-    await cp(join(root, "public"), join(root, ".dist"), { recursive: true })
+    await cp(join(root, "public"), join(root, ".dist"), { recursive: true, filter: src => basename(src) !== "README.md" })
   } catch (e) {
     if (e.code !== "ENOENT") throw e
   }
