@@ -100,7 +100,7 @@ test("a session typed on the phone reaches the server and the desktop", async ({
 
   await typeAtEnd(phone, "\n\n2027-01-15 82.5kg\n18h00~19h10\n- Row 12x20kg 10x25kg")
   await expect.poll(serverText, { timeout: 15000 }).toContain("- Row 12x20kg 10x25kg")
-  expect(git("log", "-1", "--format=%s")).toMatch(/^Sync from phone/)
+  expect(git("log", "-1", "--format=%s")).toMatch(/^Sync from phone-[0-9a-f]{4}\b/) // the default device name
   expect(git("log", "--format=%s").split("\n").length).toBeGreaterThan(before)
 
   // the desktop picks it up when it comes back into view (here: online event)
@@ -161,6 +161,43 @@ test("a stale save on the server asks before removing, and Keep restores the ses
   await expect.poll(serverText, { timeout: 20000 }).toContain("2027-01-15 82.5kg")
   expect(serverText()).toContain("- Press 8x30kg")
   expect(git("log", "--format=%s")).toContain("Outside edit")
+  expect(page.errors).toEqual([])
+  await context.close()
+})
+
+test("each edit is saved on the device once, and a failed save is reported once", async ({ browser }) => {
+  const context = await desktopContext(browser)
+  const page = await open(context)
+  await page.evaluate(() => {
+    const store = __workoutApp.store
+    const save = store.saveText.bind(store)
+    globalThis.__saves = []
+    globalThis.__failSave = false
+    store.saveText = text => {
+      __saves.push(text)
+      return __failSave ? Promise.reject(new Error("disk full")) : save(text)
+    }
+    // every message the status line shows, including ones replaced at once
+    globalThis.__shown = []
+    const el = document.querySelector("#status-text")
+    const d = Object.getOwnPropertyDescriptor(Node.prototype, "textContent")
+    Object.defineProperty(el, "textContent", { get() { return d.get.call(this) }, set(v) { __shown.push(v); d.set.call(this, v) } })
+  })
+
+  // one edit: one save, of the projected text (getText), not a second one later
+  await page.evaluate(() => __workoutApp.editor.insert("\n; saved once"))
+  await page.waitForTimeout(1000)
+  expect(await page.evaluate(() => __saves)).toEqual([await page.evaluate(() => __workoutApp.editor.getText())])
+
+  // a failed save: one error on the status line
+  await page.evaluate(() => { __saves = []; __shown = []; __failSave = true; __workoutApp.editor.insert(" again") })
+  await page.waitForTimeout(1000)
+  expect(await page.evaluate(() => __saves.length)).toBe(1)
+  const errors = (await page.evaluate(() => __shown)).filter(m => /save/i.test(m) && /device/i.test(m) && !/^Saved/.test(m))
+  expect(errors).toHaveLength(1)
+
+  await page.evaluate(() => { __failSave = false })
+  await expect.poll(serverText, { timeout: 20000 }).toContain("; saved once again")
   expect(page.errors).toEqual([])
   await context.close()
 })

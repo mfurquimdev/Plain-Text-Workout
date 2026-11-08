@@ -24,7 +24,7 @@ export class SyncClient {
   /**
    * @param {object} o
    * @param {ReturnType<typeof import("./store.js").openStore> extends Promise<infer S> ? S : never} o.store
-   * @param {string} o.device        one word, such as "phone"
+   * @param {string} o.device        the device name, such as "phone-3f9a" (src/ui/settings.js); may be reassigned
    * @param {string} [o.endpoint]    "/api"
    * @param {() => string} o.getText the editor's current text
    * @param {() => boolean} [o.isReady] false while composing or a date is unfinished

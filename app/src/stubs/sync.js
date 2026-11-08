@@ -2,7 +2,8 @@
 // in-memory store and a SyncClient whose "server" echoes the device text.
 // Development and UI tests only; src/deps.js switches to the real modules.
 //
-// Test hooks: `?stub=notloaded` starts with no log on the device, and
+// Test hooks: `?stub=notloaded` starts with no log on the device,
+// `?stub=nopersist` makes the browser refuse persistent storage, and
 // `globalThis.__workoutStub` holds {store, client, server} so a test can
 // make the client emit an event: `__workoutStub.client.emit("confirm", q)`.
 
@@ -41,7 +42,11 @@ export async function openStore() {
     : { loaded: true, text: SAMPLE_LOG, base: SAMPLE_LOG, pending: null, savedAt: Date.now() }
   const store = {
     async load() { return { ...state } },
-    async saveText(text) { state = { ...state, text, savedAt: Date.now() } },
+    async saveText(text) {
+      if (!state.loaded) throw Object.assign(new Error("the log is not loaded on this device yet"), { code: "not-loaded" })
+      state = { ...state, text, savedAt: Date.now() }
+    },
+    async persist() { return params().get("stub") !== "nopersist" },
     async _setLoaded(text) { state = { ...state, loaded: true, text, base: text, savedAt: Date.now() } },
   }
   hooks.store = store
@@ -84,7 +89,7 @@ export class SyncClient {
       this.status("syncing", "Downloading the log")
       await new Promise(r => setTimeout(r, this.server.delay))
       await this.store._setLoaded(this.server.text)
-      this.emit("merged", { text: this.server.text, notices: ["Log downloaded: offline use is ready"] })
+      this.emit("merged", { text: this.server.text, notices: ["Log downloaded: offline use is ready"], loaded: true })
       return this.status("synced", `Synced home at ${hhmm(new Date())}`)
     }
     if (!this.isReady()) return this.status("waiting", "Sync waiting: finish the date")
@@ -97,6 +102,15 @@ export class SyncClient {
     return conflicts
       ? this.status("synced", `Synced, ${conflicts} line${conflicts > 1 ? "s" : ""} need${conflicts > 1 ? "" : "s"} review`)
       : this.status("synced", `Synced home at ${hhmm(new Date())}`)
+  }
+
+  /** Like the real client: saves getText() on every edit, one error report per failed save. */
+  async notifyEdit() {
+    try {
+      await this.store.saveText(this.getText())
+    } catch (e) {
+      if (e?.code !== "not-loaded") this.status("attention", `Could not save on this device: ${e?.message ?? e}. Copy your text to keep it.`)
+    }
   }
 
   answer(choice) {

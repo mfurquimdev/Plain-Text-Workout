@@ -6,11 +6,20 @@ a contract only together with every part that uses it.
 
 ```
 app/                      Nue project (bun, nuekit 2.0.0-beta.2), built to app/.dist
-  src/lang/               language adapter: loads the WebAssembly module
-  src/sync/               device storage (IndexedDB) and sync client
-  src/editor/             CodeMirror 6 editor, highlighting, diagnostics, completion
+  index.html              the page body; ui/head.html is the head
+  src/main.js             page wiring: store, sync client, language module, editor
+  src/deps.js             picks the real modules or src/stubs/ (WORKOUT_STUBS=1)
+  src/editor/             CodeMirror 6 editor, highlighting, diagnostics, completion;
+                          lang.js adapts the WebAssembly module (section 1)
+  src/sync/               device storage (IndexedDB) and sync client (section 2)
+  src/ui/                 small helpers: copy, keyboard, notices, settings, storage
+  src/stubs/              plain-JS stand-ins for the language module and sync client
+  css/                    palette, colour tokens, fonts, layout
+  public/fonts/           bundled Monaspace fonts, served at /fonts/
   public/wasm/            built WebAssembly files (generated, not edited by hand)
-  sw.js                   service worker, served at /sw.js (not under /lib/)
+  scripts/                build, dev and static servers, generators
+  sw.js                   service worker, served at /sw.js (section 3)
+  test/                   unit/, sync/, ui/ (stubs), e2e/ (real server)
 workout_syntax/           Rust crate (submodule): parser, merge, sync server
   wasm/                   WebAssembly adapter crate (wasm-bindgen)
 ```
@@ -53,9 +62,12 @@ const store = await openStore()          // IndexedDB "workout", versioned schem
 await store.load()   // {loaded, text, base, pending, savedAt}; loaded=false before
                      // the first download ("log not loaded" is not an empty log)
 await store.saveText(text)               // durable before it resolves
+await store.persist()  // true when the browser keeps the storage; the app asks
+                       // once the log is on the device, and a refusal blocks nothing
+await store.estimate() // {usage, quota} in bytes, or null
 
 const client = new SyncClient({
-  store, device: "phone",               // device name: one word
+  store, device: "phone-3f9a",          // device name, see below
   endpoint: "/api",
   getText: () => editorText,            // the editor's current text
   isReady: () => true,                  // false while composing or a date is unfinished
@@ -68,10 +80,21 @@ client.on("merged", m => ...)  // {text, notices}: the editor applies `text`
                                // (only emitted when the editor still equals what was sent)
 client.on("confirm", q => ...) // {removalId, removals}: ask the owner
 client.answer("remove" | "keep")
+client.notifyEdit()            // on every owner edit: saves getText() on the device
+                               // (the only save path; one error report if it fails)
+                               // and syncs after a typing pause
+client.device = "kitchen"      // a rename applies to the next sync request
 client.syncNow()               // Promise<status>
 client.start()                 // sync on open, focus, online, and after typing pauses
 client.stop()
 ```
+
+The device name appears in the server's git commits ("Sync from
+phone-3f9a"), in `; conflict YYYY-MM-DD <device>: line` comments in the log
+and in the file name of a merge replay. The server accepts one word with no
+whitespace, colon or control character. The app keeps names to 1 to 32
+ASCII letters, digits, `-` or `_`, and on first run stores the kind of
+device plus four random hex digits (`app/src/ui/settings.js`).
 
 ## 3. Service worker (`app/sw.js`)
 

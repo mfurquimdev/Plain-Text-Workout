@@ -34,9 +34,9 @@ service worker; the build fills its placeholders) and `package.json`.
 | [`src/editor/`](src/editor/README.md)     | The CodeMirror 6 editor and its extensions. |
 | [`src/stubs/`](src/stubs/README.md)       | Plain-JS stand-ins for the language module and sync client (UI tests). |
 | [`src/sync/`](src/sync/README.md)         | IndexedDB store and the sync client for `workout-server`. |
-| [`src/ui/`](src/ui/README.md)             | Small DOM helpers: copy, keyboard, notices, settings. |
+| [`src/ui/`](src/ui/README.md)             | Small helpers: copy, keyboard, notices, settings (device name), storage. |
 | [`ui/`](ui/README.md)                     | The Nue `head` component. |
-| [`test/unit/`](test/unit/README.md)       | Unit tests for the editor code and the palette (`bun run test`). |
+| [`test/unit/`](test/unit/README.md)       | Unit tests for the editor code, settings, storage and the palette (`bun run test`). |
 | [`test/sync/`](test/sync/README.md)       | Store, sync client, server and service worker tests (`bun run test`). |
 | [`test/ui/`](test/ui/README.md)           | Playwright tests on the stubs (`bun run test:ui`). |
 | [`test/e2e/`](test/e2e/README.md)         | Playwright tests of the real app and server (`bun run test:e2e`). |

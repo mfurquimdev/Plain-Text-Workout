@@ -12,7 +12,7 @@ directory's config.
 | File                   | Purpose |
 |------------------------|---------|
 | `playwright.config.js` | Runs `*.pw.js` here, one worker, 90 s per test. Results go to `../../test-results/e2e`. |
-| `e2e.pw.js`            | Builds `workout-server` with cargo in `../../../workout_syntax`, copies `tests/fixtures/Workout.md` into a new git repository in a temporary directory, and starts the server on a free local port with `--app .dist`, so one server serves the page and `/api/`. The tests run in order: the real module colours the log and reports a parse error; a session typed on the phone reaches the server and the desktop; offline, the app opens from the service worker, keeps the typing and syncs when back online; a stale save on the server asks before removing, and Keep restores the session; screenshots in light and dark. |
+| `e2e.pw.js`            | Builds `workout-server` with cargo in `../../../workout_syntax`, copies `tests/fixtures/Workout.md` into a new git repository in a temporary directory, and starts the server on a free local port with `--app .dist`, so one server serves the page and `/api/`. The tests run in order: the real module colours the log and reports a parse error; a session typed on the phone reaches the server and the desktop; offline, the app opens from the service worker, keeps the typing and syncs when back online; a stale save on the server asks before removing, and Keep restores the session; each edit is saved on the device once, of `editor.getText()`, and a failed save is reported once; screenshots in light and dark. |
 
 ## How it relates
 

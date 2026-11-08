@@ -24,6 +24,12 @@
             <option value="dark">Dark</option>
           </select>
         </label>
+        <label class="setting setting-device">
+          <span>Device name</span>
+          <input type="text" id="setting-device" maxlength="32" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="device-note">
+        </label>
+        <p id="device-note" class="setting-note">Letters, digits, - or _. The server names it in sync commits and conflict comments.</p>
+        <p id="storage-note" class="setting-note" hidden></p>
         <p id="about" class="setting-note"></p>
       </div>
     </details>

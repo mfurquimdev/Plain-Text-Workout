@@ -7,8 +7,8 @@ functions they need.
 
 | File        | Purpose |
 |-------------|---------|
-| `store.js`  | One IndexedDB record (database `workout`, object store `log`, key `current`) with `loaded`, `text`, `base` (the text this device last agreed with the server), `pending` (the sync request in flight) and `savedAt`. `openStore()` opens it and runs schema migrations. `update(patch)` writes fields in one readwrite transaction with strict durability, so text, base and pending never disagree. `saveText()` is refused with code `not-loaded` before the first download, so an empty editor is never saved as the log. Also `persist()`, `estimate()` and `StoreError`. |
-| `client.js` | `SyncClient`. Downloads the log on first open (`GET /api/log`), then syncs (`POST /api/sync`) on start, when the page becomes visible, when the network comes back and after a 2 s pause in typing. It follows the device rule: one sync at a time; the request is stored as `pending` before it is sent; an unknown outcome (network error, timeout, 5xx) resends the same request after a backoff; a merged reply is adopted only if the editor still holds the sent text, otherwise the sent text becomes the base and it syncs again. Handles the `confirm` (removal question), `wait` and protocol replies. Emits `status`, `merged` and `confirm` events. |
+| `store.js`  | One IndexedDB record (database `workout`, object store `log`, key `current`) with `loaded`, `text`, `base` (the text this device last agreed with the server), `pending` (the sync request in flight) and `savedAt`. `openStore()` opens it and runs schema migrations. `update(patch)` writes fields in one readwrite transaction with strict durability, so text, base and pending never disagree. `saveText()` is refused with code `not-loaded` before the first download, so an empty editor is never saved as the log. Also `persist()` (called once by `src/main.js` through `src/ui/storage.js` when the log is on the device), `estimate()` and `StoreError`. |
+| `client.js` | `SyncClient`. Downloads the log on first open (`GET /api/log`), then syncs (`POST /api/sync`) on start, when the page becomes visible, when the network comes back and after a 2 s pause in typing. It follows the device rule: one sync at a time; the request is stored as `pending` before it is sent; an unknown outcome (network error, timeout, 5xx) resends the same request after a backoff; a merged reply is adopted only if the editor still holds the sent text, otherwise the sent text becomes the base and it syncs again. Handles the `confirm` (removal question), `wait` and protocol replies. Emits `status`, `merged` and `confirm` events. `notifyEdit()` is the only path that saves the owner's edits: it saves `getText()` at once (one save at a time, the last text wins), reports a failed save once on the status line, and starts the typing-pause timer. |
 
 ## How the files relate
 
@@ -16,9 +16,13 @@ functions they need.
   it does not import `store.js`.
 - `src/deps.js` imports both and gives them to `src/main.js`, unless the
   build uses the stubs in `src/stubs/sync.js`.
-- `main.js` gives the client `getText` (the editor's `getText()`),
+- `main.js` gives the client `getText` (the editor's `getText()`, which
+  includes merged text still waiting to be applied, so a save during that
+  wait keeps the other device's changes),
   `isReady` (false while composing or while a date is half typed),
-  `device` (from `src/ui/settings.js`) and `endpoint: "/api"`.
+  `device` (from `src/ui/settings.js`) and `endpoint: "/api"`. It sets
+  `client.device` when the owner renames the device, and calls
+  `notifyEdit()` on every edit.
 - The request and reply formats are in `../../../docs/web-app-interfaces.md`,
   section 2. The server side is `workout-server` in `../../../workout_syntax`.
 
@@ -27,6 +31,6 @@ functions they need.
 | Test | Covers |
 |------|--------|
 | `test/sync/store.test.js`  | `store.js` on `fake-indexeddb`: not loaded, refused saves, one transaction, schema name and version, write errors, `persist()` and `estimate()`. |
-| `test/sync/client.test.js` | `client.js` with a fake fetch: first open, the device rule, lost replies, 5xx, timeouts, typing during a sync, the removal question, offline and online, protocol errors. |
+| `test/sync/client.test.js` | `client.js` with a fake fetch: first open, the device rule, lost replies, 5xx, timeouts, typing during a sync, the removal question, offline and online, protocol errors, one save and one error report per edit. |
 | `test/sync/server.test.js` | Two clients (phone and desktop) against the real `workout-server`. |
 | `test/e2e/e2e.pw.js`       | The built app in a browser against the real server. |

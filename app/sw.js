@@ -12,7 +12,7 @@
 //   BUILD_ID   a unique build string, such as the git commit or a content
 //              hash; it names the cache, so each build gets its own
 //   APP_FILES  the whole placeholder array becomes a JSON array of the
-//              app's paths, such as ["/", "/index.html", "/lib/app.js",
+//              app's paths, such as ["/", "/index.html", "/js/app.js",
 //              "/wasm/workout_wasm_bg.wasm"]
 // For example, in a bun build script:
 //   sw.replace('"__BUILD' + '_ID__"', JSON.stringify(id))

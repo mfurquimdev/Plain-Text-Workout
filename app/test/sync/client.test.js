@@ -321,3 +321,29 @@ describe("triggers", () => {
     t.client.stop()
   })
 })
+
+describe("saving on the device", () => {
+  test("one edit is one save of getText(), and a failed save is one error", async () => {
+    const { store } = await loadedStore(LOG)
+    const saves = []
+    let fail = false
+    const saveText = store.saveText.bind(store)
+    store.saveText = (text) => {
+      saves.push(text)
+      return fail ? Promise.reject(new Error("disk full")) : saveText(text)
+    }
+    const editor = { text: LOG }
+    const t = makeClient({ store, fetch: fakeFetch((call) => merged(call.body.text)), editor })
+    editor.text = TYPED
+    await t.client.notifyEdit()
+    expect(saves).toEqual([TYPED])
+
+    fail = true
+    editor.text = TYPED + "- more\n"
+    await t.client.notifyEdit()
+    expect(saves).toHaveLength(2)
+    expect(t.statuses.filter((s) => s.state === "attention")).toEqual([
+      expect.objectContaining({ code: "save-failed", message: "Could not save on this device: disk full. Copy your text to keep it." }),
+    ])
+  })
+})

@@ -9,6 +9,7 @@ import { copyText } from "./ui/copy.js"
 import { showNotices } from "./ui/notices.js"
 import { watchKeyboard } from "./ui/keyboard.js"
 import { settings, applyTheme } from "./ui/settings.js"
+import { keepOnDevice } from "./ui/storage.js"
 
 const $ = sel => document.querySelector(sel)
 const touch = matchMedia("(pointer: coarse)").matches
@@ -29,23 +30,14 @@ async function main() {
   const store = await openStore()
   const local = await store.load()
   let editor = null
-  let lastSaved = local.text
+  let loadedText = local.text
 
-  // saving: debounced, and flushed when the page is hidden
-  let saveTimer = null
-  const save = () => {
-    clearTimeout(saveTimer); saveTimer = null
-    if (!editor) return
-    const text = editor.getText()
-    if (text === lastSaved) return
-    lastSaved = text
-    store.saveText(text).catch(e => setStatus({ state: "attention", message: `Needs attention: not saved on this device (${e.message ?? e})` }))
-  }
-  const scheduleSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(save, 300) }
-  addEventListener("pagehide", save)
-  document.addEventListener("visibilitychange", () => { if (document.hidden) save() })
-
-  const currentText = () => editor ? editor.getText() : lastSaved
+  // Saving: the sync client is the one path. Each edit calls
+  // client.notifyEdit(), which saves editor.getText() (the projected text,
+  // with merged text still waiting to be applied) on the device right away,
+  // reports a failed save on the status line, and syncs after a typing
+  // pause; a sync stores the text with its request before sending it.
+  const currentText = () => editor ? editor.getText() : loadedText
   const client = new SyncClient({
     store,
     device: settings.device(touch),
@@ -73,13 +65,13 @@ async function main() {
     document.body.dataset.screen = "editor"
     $("#not-loaded").hidden = true
     if (editor) return
-    lastSaved = text
+    loadedText = text
     editor = createEditor({
       parent: $("#editor"),
       doc: text,
       lang,
       touch,
-      onChange: () => { scheduleSave(); client.notifyEdit() },
+      onChange: () => { client.notifyEdit() },
       onTap: showTap,
       onHistory: ({ undo }) => { $("#undo").disabled = !undo },
     })
@@ -92,7 +84,16 @@ async function main() {
     $("#not-loaded").hidden = false
   }
 
-  client.on("merged", ({ text, notices }) => {
+  // ask once, when the log is on the device, that the browser keep it
+  let askedToKeep = false
+  function askToKeep() {
+    if (askedToKeep) return
+    askedToKeep = true
+    keepOnDevice(store, { note: text => { const n = $("#storage-note"); n.textContent = text; n.hidden = false } })
+  }
+
+  client.on("merged", ({ text, notices, loaded }) => {
+    if (loaded) askToKeep()
     if (!editor) showEditor(text)
     else editor.offerRemote(text)
     showNotices($("#notices"), notices)
@@ -160,13 +161,31 @@ async function main() {
   const theme = $("#setting-theme")
   theme.value = settings.theme()
   theme.addEventListener("change", () => { settings.setTheme(theme.value); applyTheme(theme.value) })
+  const device = $("#setting-device")
+  const deviceNote = $("#device-note")
+  const deviceHint = deviceNote.textContent
+  device.value = client.device
+  device.addEventListener("change", () => {
+    const name = device.value.trim()
+    const error = settings.setDevice(name)
+    device.setAttribute("aria-invalid", error ? "true" : "false")
+    if (error) {
+      deviceNote.textContent = `${error}. The name stays ${client.device}.`
+      deviceNote.dataset.error = ""
+      return
+    }
+    device.value = name
+    client.device = name // the next sync request carries it
+    deviceNote.textContent = deviceHint
+    delete deviceNote.dataset.error
+  })
 
   // notices float just above the bar
   new ResizeObserver(() => {
     document.documentElement.style.setProperty("--bar-height", `${bar.offsetHeight}px`)
   }).observe(bar)
 
-  if (local.loaded) showEditor(local.text)
+  if (local.loaded) { showEditor(local.text); askToKeep() }
   else showNotLoaded()
   client.on("status", s => { if (s.state === "not-loaded" && !editor) showNotLoaded() })
 

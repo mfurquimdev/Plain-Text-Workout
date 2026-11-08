@@ -103,6 +103,72 @@ test("the theme setting overrides the system scheme", async ({ page }) => {
   await page.selectOption("#setting-theme", "auto")
 })
 
+test("the device name: a default with a random suffix, renamed in the settings panel", async ({ page }, info) => {
+  await open(page)
+  const kind = phone(info) ? "phone" : "desktop"
+  const first = await page.evaluate(() => __workoutApp.client.device)
+  expect(first).toMatch(new RegExp(`^${kind}-[0-9a-f]{4}$`))
+  expect(await page.evaluate(() => localStorage.getItem("workout.device"))).toBe(first)
+
+  await page.locator(".settings summary").click()
+  const input = page.locator("#setting-device")
+  await expect(input).toHaveValue(first)
+  // refused: spaces and colons would break the conflict comment format
+  for (const bad of ["my phone", "phone:2", ""]) {
+    await input.fill(bad)
+    await input.press("Enter")
+    await expect(input).toHaveAttribute("aria-invalid", "true")
+    await expect(page.locator("#device-note")).toContainText(`The name stays ${first}`)
+  }
+  expect(await page.evaluate(() => __workoutApp.client.device)).toBe(first)
+
+  await input.fill(" kitchen-tablet ")
+  await input.press("Enter")
+  await expect(input).toHaveAttribute("aria-invalid", "false")
+  await expect(input).toHaveValue("kitchen-tablet")
+  await expect(page.locator("#device-note")).toHaveText(/^Letters, digits/)
+  expect(await page.evaluate(() => __workoutApp.client.device)).toBe("kitchen-tablet")
+
+  await page.reload()
+  await expect(page.locator(".cm-content")).toBeVisible()
+  expect(await page.evaluate(() => __workoutApp.client.device)).toBe("kitchen-tablet")
+})
+
+test("each edit is saved once, and a failed save is reported once", async ({ page }) => {
+  await open(page)
+  await page.evaluate(() => {
+    const store = __workoutStub.store
+    const save = store.saveText.bind(store)
+    globalThis.__saves = []
+    globalThis.__failSave = false
+    store.saveText = text => { __saves.push(text); return __failSave ? Promise.reject(new Error("disk full")) : save(text) }
+    globalThis.__shown = []
+    const el = document.querySelector("#status-text")
+    const d = Object.getOwnPropertyDescriptor(Node.prototype, "textContent")
+    Object.defineProperty(el, "textContent", { get() { return d.get.call(this) }, set(v) { __shown.push(v); d.set.call(this, v) } })
+  })
+  await page.evaluate(() => __workoutApp.editor.insert("\n; saved once"))
+  await page.waitForTimeout(800)
+  expect(await page.evaluate(() => __saves)).toEqual([await text(page)])
+
+  await page.evaluate(() => { __saves = []; __shown = []; __failSave = true; __workoutApp.editor.insert(" again") })
+  await page.waitForTimeout(800)
+  expect(await page.evaluate(() => __saves.length)).toBe(1)
+  expect((await page.evaluate(() => __shown)).filter(m => /not saved|could not save/i.test(m))).toHaveLength(1)
+  await expect(page.locator("#status")).toHaveAttribute("data-state", "attention")
+})
+
+test("persistent storage: no note when granted, a short note when refused", async ({ page }) => {
+  await open(page)
+  await page.locator(".settings summary").click()
+  await expect(page.locator("#storage-note")).toBeHidden()
+  await open(page, "?stub=nopersist")
+  await expect(page.locator("#status-text")).toHaveText(/Synced/) // nothing blocked
+  await page.locator(".settings summary").click()
+  await expect(page.locator("#storage-note")).toBeVisible()
+  await expect(page.locator("#storage-note")).toHaveText(/may clear the log on this device if space runs low/)
+})
+
 test("a parse error is a wavy underline in Krypton, not red", async ({ page }) => {
   await open(page)
   await cursorAtLineEnd(page, 1)

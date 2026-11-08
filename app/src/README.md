@@ -6,7 +6,7 @@ page. Nue does not read this directory itself (`site.yaml` skips it).
 
 | File      | Purpose |
 |-----------|---------|
-| `main.js` | The page wiring. Opens the device store, creates the sync client, loads the language module and creates the editor in `#editor`. Handles the status line, the "Log not loaded" screen, the removal dialog, "Copy my text", the tap panel, the logging bar, the settings and notices. Saves the editor text on the device (debounced, and when the page is hidden) and registers `/sw.js`. Exposes `globalThis.__workoutApp` for the tests. |
+| `main.js` | The page wiring. Opens the device store, creates the sync client, loads the language module and creates the editor in `#editor`. Handles the status line, the "Log not loaded" screen, the removal dialog, "Copy my text", the tap panel, the logging bar, the settings and notices. Each edit calls `client.notifyEdit()`, which is the one place that saves the editor text on the device (see [`sync/`](sync/README.md)). Once the log is on the device (on open, or after the first download) it asks the browser once to keep it (`ui/storage.js`). Registers `/sw.js`. Exposes `globalThis.__workoutApp` for the tests. |
 | `deps.js` | The one place that chooses the real modules or the stubs. A normal build uses `/wasm/workout_wasm.js` and [`sync/`](sync/README.md). A build with `WORKOUT_STUBS=1` uses [`stubs/`](stubs/README.md). The bundler drops the unused branch. Exports `openStore`, `SyncClient`, `loadLang` and `usingStubs`. |
 
 ## Subdirectories

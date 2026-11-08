@@ -8,12 +8,14 @@ does. The page then shows "(development stubs)" in the settings panel.
 | File      | Stands in for | Purpose |
 |-----------|---------------|---------|
 | `lang.js` | The WebAssembly language module (`/wasm/workout_wasm.js`) | The same functions (`init`, `kinds`, `version`, `tokenize`, `diagnostics`, `unfinished_date`, `completions`, `hover`), with a regex tokenizer that returns all 24 token kinds, two diagnostics (an incomplete date, and an uppercase `X` with a quick fix), exercise-name completion from earlier lines and a short hover. |
-| `sync.js` | `src/sync/store.js` and `src/sync/client.js` | An in-memory store that starts with `SAMPLE_LOG`, and a `SyncClient` whose "server" stores the text it receives and sends it back. It emits the same `status`, `merged` and `confirm` events as the real client. |
+| `sync.js` | `src/sync/store.js` and `src/sync/client.js` | An in-memory store that starts with `SAMPLE_LOG`, and a `SyncClient` whose "server" stores the text it receives and sends it back. It emits the same `status`, `merged` and `confirm` events as the real client, and its `notifyEdit()` saves `getText()` once per edit like the real one. The store's `persist()` resolves `true`. |
 
 ## Test hooks
 
 - `?stub=notloaded` in the page URL starts with no log on the device and
   the server unreachable, so the "Log not loaded" screen stays.
+- `?stub=nopersist` makes the store's `persist()` resolve `false`, as when
+  the browser refuses persistent storage.
 - `globalThis.__workoutStub` holds `{store, client, server}`. A test can
   call `__workoutStub.client.emit("confirm", q)` to open the removal
   dialog, or change `server.reachable` and `server.text`.

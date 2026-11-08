@@ -1,7 +1,8 @@
 // Builds app/.dist:
 //   1. bun bundles src/main.js (editor, UI, CodeMirror) into js/app.js;
 //   2. Nue builds the page shell into .dist (and adds js/app.js to it);
-//   3. public/ (the WebAssembly files) is copied to the root of .dist.
+//   3. public/ (the WebAssembly files and the fonts) is copied to the root
+//      of .dist.
 // Usage: bun scripts/build.js [--dev]   (--dev: no minifying)
 
 import { cp, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises"

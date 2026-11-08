@@ -11,7 +11,7 @@ this directory's config.
 | File                   | Purpose |
 |------------------------|---------|
 | `playwright.config.js` | Runs `*.pw.js` here against `.dist`, served by `scripts/serve.js` on 127.0.0.1 port 4174 (or `UI_PORT`). Two projects: `phone` (360 × 780, touch) and `desktop` (1280 × 800). Results go to `../../test-results`. |
-| `app.pw.js`            | The page: it loads with the log, status line and logging bar; `tok-*` classes; conflict colours on both themes; the theme setting; parse errors as a wavy underline in Krypton; the three fonts and that they load from `/fonts/`; the symbol row; decimal commas; "Start session"; "Same set again" and Undo; the removal dialog; remote text outside the undo history; the "Log not loaded" screen with "Copy my text"; no horizontal scroll; hover (desktop) or tap (phone); completion. It also saves screenshots. |
+| `app.pw.js`            | The page: it loads with the log, status line and logging bar; `tok-*` classes; conflict colours on both themes; the theme setting; the device name (a `phone-`/`desktop-` default, refused names, renaming, kept after a reload); one save and one error report per edit; the persistent-storage note (`?stub=nopersist`); parse errors as a wavy underline in Krypton; the three fonts and that they load from `/fonts/`; the symbol row; decimal commas; "Start session"; "Same set again" and Undo; the removal dialog; remote text outside the undo history; the "Log not loaded" screen with "Copy my text"; no horizontal scroll; hover (desktop) or tap (phone); completion. It also saves screenshots. |
 
 ## How it relates
 
