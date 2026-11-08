@@ -1,0 +1,64 @@
+GIMP Palette
+Name: Dark Nord
+Columns: 4
+#
+
+#242933
+36  41  51  Darker Polar Night
+
+#2e3440
+46  52  64  Polar Night 1
+
+#3B4252
+59  66  82  Polar Night 2
+
+#434c5e
+67  76  94  Polar Night 3
+
+#4c566a
+76  86  106 Polar Night 4
+
+#616e88
+97  110 136 Lighter Polar Night
+
+#a9b1bf
+169 177 191 Dimmer Snow Storm
+
+#d8dee9
+216 222 233 Snow Storm 1
+
+#e5e9f0
+229 233 240 Snow Storm 2
+
+#eceff4
+236 239 244 Snow Storm 3
+
+#f8f9fb
+248 249 251 Lighter Snow Storm
+
+#8fbcbb
+143 188 187 Frost 1
+
+#88c0d0
+136 192 208 Frost 2
+
+#81a1c1
+129 161 193 Frost 3
+
+#5e81ac
+94  129 172 Frost 4
+
+#bf616a
+191 97  106 Aurora Red
+
+#d08770
+208 135 112 Aurora Orange
+
+#ebcb8b
+235 203 139 Aurora Yellow
+
+#a3be8c
+163 190 140 Aurora Green
+
+#b48ead
+180 142 173 Aurora Purple
